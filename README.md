@@ -7,7 +7,7 @@ You can not trust him. A lot of bugs, do not use it!
 * NodeJs
 
 ## Scheme
-![scheme_img](http://i.imgur.com/DCVrxFL.png)
+![scheme_img](http://i.imgur.com/qzWAGPj.png)
 
 ## Example
 ### NodeJs
