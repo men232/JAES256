@@ -50,10 +50,11 @@ namespace JAES256
             return Convert.ToBase64String(this.EncryptBytes(byteData, shared_key));
         }
 
-        public string Decrypt(string inputBase64, string shared_key)
+        public string Decrypt(string inputBase64, string shared_key, bool skiptTmestamp = false)
         {
             byte[] data = Convert.FromBase64String(inputBase64);
-            return Encoding.UTF8.GetString(this.DecryptBytes(data, shared_key));
+            int exipe_on;
+            return Encoding.UTF8.GetString(this.DecryptBytes(data, shared_key, skiptTmestamp, out exipe_on));
         }
 
         public byte[] EncryptBytes(byte[] data, string shared_key)
@@ -82,7 +83,7 @@ namespace JAES256
             return result;
         }
 
-        public byte[] DecryptBytes(byte[] data, string shared_key, bool skiptTmestamp = false)
+        public byte[] DecryptBytes(byte[] data, string shared_key, bool skiptTmestamp, out int exipe_on)
         {
             if (data.Length <= 20)
                 throw new ArgumentNullException("data should be more than 20 bytes");
@@ -107,11 +108,13 @@ namespace JAES256
             Buffer.BlockCopy(decryptData, 20, _timestamp, 0, 8);
             Buffer.BlockCopy(decryptData, 28, _dataBlock, 0, decryptData.Length - 28);
 
-            if (SHA1(decryptData) != signature)
+            exipe_on = Convert.ToInt32(BitConverter.ToDouble(_timestamp, 0) - GetTimestamp());
+
+            if (ToHex(SHA1(decryptData)) != ToHex(signature))
                 throw new Exception("Signature of data not valid.");
-            else if (m_salt != _slat)
+            else if (ToHex(m_salt) != ToHex(_slat))
                 throw new Exception("Salt of data not valid.");
-            else if (!skiptTmestamp && GetTimestamp() - BitConverter.ToDouble(_timestamp, 0) > BLOCK_EXIPE_TIME)
+            else if (!skiptTmestamp && (exipe_on < 0 || exipe_on > BLOCK_EXIPE_TIME))
                 throw new Exception("Timestamp of data has expired.");
 
             return _dataBlock;
